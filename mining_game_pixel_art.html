@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Mining Game Pixel Art</title>
+  <style>
+    body { background: #222; color: white; text-align: center; font-family: Arial, sans-serif; }
+    #game { margin: 20px auto; display: grid; gap: 2px; }
+    .slot {
+      width: 64px; height: 64px; background: #444;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; position: relative;
+    }
+    .machine {
+      width: 48px; height: 48px; background-size: contain;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    #controls button { margin: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Mining Game Pixel Art</h1>
+  <div id="stats">Monete: <span id="money">500</span> | Energia: <span id="energy">100/100</span></div>
+  <div id="game"></div>
+  <div id="controls">
+    <button onclick="expandGrid()">Espandi Griglia (200 monete)</button>
+    <button onclick="buyMachine(0)">Compra Miner Base (100 monete)</button>
+  </div>
+  <audio id="coinSound" src="https://freesound.org/data/previews/341/341695_5858296-lq.mp3"></audio>
+  <script>
+    let gridSize = 2, money = 500, energyMax = 100, energyUsed = 0;
+    const machineTypes = [{name:'Base', cost:100, power:10, energy:10, img:'https://i.imgur.com/1CkqYFG.png'}];
+
+    function updateGrid() {
+      const game = document.getElementById('game');
+      game.innerHTML = '';
+      game.style.gridTemplateColumns = `repeat(${gridSize}, 64px)`;
+      for(let i=0; i<gridSize*gridSize; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        game.appendChild(slot);
+      }
+    }
+
+    function expandGrid() {
+      if(money >= 200) {
+        money -= 200; gridSize++; energyMax += 50;
+        updateStats(); updateGrid();
+      }
+    }
+
+    function buyMachine(typeIdx) {
+      const type = machineTypes[typeIdx];
+      if(money < type.cost || energyUsed+type.energy > energyMax) return;
+      const slot = [...document.querySelectorAll('.slot')].find(s => !s.innerHTML);
+      if(!slot) return;
+      const img = document.createElement('div');
+      img.className = 'machine';
+      img.style.backgroundImage = `url(${type.img})`;
+      slot.appendChild(img);
+      money -= type.cost; energyUsed += type.energy;
+      document.getElementById('coinSound').play();
+      updateStats();
+    }
+
+    function miningLoop() {
+      const machines = document.querySelectorAll('.machine').length;
+      money += machines * 2; // produzione base semplice
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById('money').innerText = money;
+      document.getElementById('energy').innerText = `${energyUsed}/${energyMax}`;
+    }
+
+    updateGrid();
+    setInterval(miningLoop, 3000);
+  </script>
+</body>
+</html>
