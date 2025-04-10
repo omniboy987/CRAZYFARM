@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Mining Game Pixel Art</title>
+  <style>
+    body { background: #222; color: white; text-align: center; font-family: Arial, sans-serif; }
+    #game { margin: 20px auto; display: grid; gap: 2px; }
+    .slot {
+      width: 64px; height: 64px; background: #444;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; position: relative;
+    }
+    .machine {
+      width: 48px; height: 48px; background-size: contain; background-repeat: no-repeat;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    #controls button { margin: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Mining Game Pixel Art</h1>
+  <div id="stats">Monete: <span id="money">1000</span> | Energia: <span id="energy">0/100</span></div>
+  <div id="game"></div>
+  <div id="controls">
+    <button onclick="expandGrid()">Espandi Griglia (200 monete)</button><br>
+    <button onclick="buyMachine(0)">Miner Base (100 monete)</button>
+    <button onclick="buyMachine(1)">Miner Plus (250 monete)</button>
+    <button onclick="buyMachine(2)">Miner Pro (500 monete)</button>
+    <button onclick="buyMachine(3)">Miner Ultra (1000 monete)</button>
+    <button onclick="buyMachine(4)">Miner Xtreme (2500 monete)</button>
+    <button onclick="buyMachine(5)">Miner Quantum (5000 monete)</button>
+  </div>
+  <audio id="coinSound" src="https://freesound.org/data/previews/341/341695_5858296-lq.mp3"></audio>
+  <script>
+    let gridSize = 2, money = 1000, energyMax = 100, energyUsed = 0;
+    const machineTypes = [
+      {name:'Base', cost:100, power:5, energy:10, img:'miner_sprite_1.png'},
+      {name:'Plus', cost:250, power:12, energy:20, img:'miner_sprite_2.png'},
+      {name:'Pro', cost:500, power:30, energy:40, img:'miner_sprite_3.png'},
+      {name:'Ultra', cost:1000, power:60, energy:70, img:'miner_sprite_4.png'},
+      {name:'Xtreme', cost:2500, power:120, energy:130, img:'miner_sprite_5.png'},
+      {name:'Quantum', cost:5000, power:300, energy:300, img:'miner_sprite_6.png'}
+    ];
+    let totalPower = 0;
+
+    function updateGrid() {
+      const game = document.getElementById('game');
+      game.innerHTML = '';
+      game.style.gridTemplateColumns = `repeat(${gridSize}, 64px)`;
+      for(let i=0; i<gridSize*gridSize; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        game.appendChild(slot);
+      }
+    }
+
+    function expandGrid() {
+      if(money >= 200) {
+        money -= 200;
+        gridSize++;
+        energyMax += 50;
+        updateStats();
+        updateGrid();
+      }
+    }
+
+    function buyMachine(typeIdx) {
+      const type = machineTypes[typeIdx];
+      if(money < type.cost || energyUsed + type.energy > energyMax) return;
+      const slot = [...document.querySelectorAll('.slot')].find(s => !s.innerHTML);
+      if(!slot) return;
+      const img = document.createElement('div');
+      img.className = 'machine';
+      img.style.backgroundImage = `url(${type.img})`;
+      slot.appendChild(img);
+      money -= type.cost;
+      energyUsed += type.energy;
+      totalPower += type.power;
+      document.getElementById('coinSound').play();
+      updateStats();
+    }
+
+    function miningLoop() {
+      money += totalPower;
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById('money').innerText = money;
+      document.getElementById('energy').innerText = `${energyUsed}/${energyMax}`;
+    }
+
+    updateGrid();
+    setInterval(miningLoop, 3000);
+  </script>
+</body>
+</html>
